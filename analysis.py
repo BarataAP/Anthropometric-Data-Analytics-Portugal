@@ -68,7 +68,7 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
     cwd = os.getcwd()
     dirList = os.listdir(cwd)
     polyDict = {}
-    gestDict = gestationDictionary()
+    gestDict = gestationDictionary(gestation)
     values = gestDict.keys()
     values.sort()
     polyDict = {}
@@ -210,10 +210,3 @@ def dataCSV():
         lineL = lineL[:-1] + "\n"
         op.write(lineL)
     op.close()
-
-    
-    
-    
-    
-    
-    
