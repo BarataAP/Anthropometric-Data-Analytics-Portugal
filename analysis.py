@@ -68,24 +68,17 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
     cwd = os.getcwd()
     dirList = os.listdir(cwd)
     polyDict = {}
-    gestDict = gestationDictionary(gestation)
-    values = gestDict.keys()
-    values.sort()
-    polyDict = {}
     if plot == True:
         try:
-            if mean == 0:
+            if mean == False:
                 if "Values" in dirList:
                     shutil.rmtree("Values")
-                else:
-                    os.mkdir("Values")
-                os.chdir("Values")
+                os.mkdir("Values")
+                
             else:
                 if "Means" in dirList:
                     shutil.rmtree("Means")
-                else:
-                    os.mkdir("Means")
-                os.chdir("Means")
+                os.mkdir("Means")
         except:
             return polynomialDictionary(gestation, degrees, mean, plot)
     for variable in VARIABLES:
@@ -93,14 +86,21 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
             polyDict[variable] = {}
             x = []
             y = []
-            for value in values:
-                if mean == False:
+            if mean == False:
+                gestDict = gestationDictionary(gestation)
+                values = gestDict.keys()
+                values.sort()
+                for value in values:
                     x = x + gestDict[value][variable]
                     for i in range(0, len(gestDict[value][variable])):                    
                         y.append(value)
-                else:
-                    x.append(np.mean(gestDict[value][variable]))
-                    y.append(value)
+            else:
+                gestDict = gestationDictionary(gestation)
+                values = gestDict.keys()
+                values.sort()
+                for value in values:
+                    x.append(value)
+                    y.append(np.mean(gestDict[value][variable]))
             for degree in range(1, degrees + 1):
                 polyDict[variable][degree] = {}
                 p = list(np.polyfit(x, y, degree))
@@ -133,13 +133,6 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
                 r2 = 1 - ssr/sst
                 polyDict[variable][degree]['R2'] = r2
                 if plot == True:
-                    plt.hold(True)
-                    if mean == 0:
-                        fileName = variable + " - Degree " + str(degree) + " - Values"
-                        legend = ["Regression", "Observed Value"]
-                    else:
-                        fileName = variable + " - Degree " + str(degree) + " - Means"
-                        legend = ["Regression", "Observed Mean"]
                     xMin = min(polyDict[variable][degree]["x"])
                     xMax = max(polyDict[variable][degree]["x"])
                     yMin = min(polyDict[variable][degree]["y"])
@@ -161,8 +154,25 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
                     yMargin = (yMax - yMin)/100.0
                     plt.xlim([xMin - xMargin*5, xMax + xMargin*5])
                     plt.ylim([yMin - yMargin*10, yMax + yMargin*10])
-                    plt.scatter(polyDict[variable][degree]["x"], polyDict[variable][degree]["y"],
-                                marker = "o", color = "blue", edgecolor = "black", alpha = 0.5)
+                    plt.hold(True)
+                    if mean == 0:
+                        os.chdir("Values")
+                        fileName = variable + " - Degree " + str(degree) + " - Values"
+                        legend = ["Regression", "Observed Value"]
+                        plt.xlabel(variable)
+                        plt.ylabel(gestation)
+                    else:
+                        os.chdir("Means")
+                        fileName = variable + " - Degree " + str(degree) + " - Means"
+                        legend = ["Regression", "Observed Mean"]
+                        plt.xlabel(gestation)
+                        plt.ylabel(variable)
+                    if mean == 0:
+                        plt.scatter(x, y,
+                                    marker = "o", color = "blue", edgecolor = "black", alpha = 0.5)
+                    else:
+                        plt.scatter(x, y,
+                                    marker = "o", color = "blue", edgecolor = "black", alpha = 0.5)
                     plt.plot(xPlot, yPlot, color = "red")
                     if degree == 1:
                         title = "$\mathregular{" + str(degree) + "^{st}}$ Degree Polynomial Regression"
@@ -173,8 +183,6 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
                     else:
                         title = "$\mathregular{" + str(degree) + "^{th}}$ Degree Polynomial Regression"
                     plt.title(title)
-                    plt.xlabel(variable)
-                    plt.ylabel(gestation)
                     r2Anno = "%.3f" % polyDict[variable][degree]["R2"]
                     seeAnno = "%.3f" % polyDict[variable][degree]["see"]
                     annot1 = "$\mathregular{R^{2}}$ = " + r2Anno
@@ -185,7 +193,7 @@ def polynomialDictionary(gestation = VARIABLES[0], degrees = 2, mean = False, pl
                     plt.savefig(fileName, dpi = 500)
                     plt.hold(False)
                     plt.clf()
-    os.chdir(cwd)
+                    os.chdir(cwd)
     return polyDict
                 
 def dataCSV():
